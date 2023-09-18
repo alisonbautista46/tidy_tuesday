@@ -1,0 +1,120 @@
+---
+title: "Refugees_tiidyTuesday"
+author: "Alison Bautista"
+date: "2023-08-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(ggplot2)
+library(ggsankey)
+library(networkD3)
+library(dplyr)
+library(ggalluvial)
+library(htmltools)
+library(htmlwidgets)
+```
+
+
+
+```{r}
+tuesdata <- tidytuesdayR::tt_load('2023-08-22')
+tuesdata %>%
+  map(glimpse)
+
+```
+
+
+```{r}
+refugees <- tuesdata$population %>%
+  filter(year == 2022) %>%
+  mutate(total = refugees + asylum_seekers) %>%
+  select(coo_name, coa_name, total)
+```
+
+```{r}
+top_5_coo <- refugees %>%
+  group_by(coo_name) %>%
+  summarize(num_by_coo = sum(total)) %>%
+  slice_max(order_by = num_by_coo, n = 5)
+
+top_5_coo <- top_5_coo$coo_name
+
+top_5_coo
+```
+
+```{r}
+top_8_coa <- refugees %>%
+  group_by(coa_name) %>%
+  summarize(num_by_coa = sum(total)) %>%
+  slice_max(order_by = num_by_coa, n = 8)
+
+top_8_coa <- top_8_coa$coa_name
+
+top_8_coa
+```
+```{r}
+refugees$coa_name = factor(refugees$coa_name)
+
+refugees$coa_name <- refugees$coa_name %>%
+  fct_other(keep = top_8_coa, other_level = "other")
+
+refugees$coo_name = factor(refugees$coo_name)
+
+refugees$coo_name <- refugees$coo_name %>%
+  fct_other(keep = top_5_coo, other_level = "other")
+
+
+refugees_no_other <- refugees %>%
+  filter((coo_name != "other"))
+```
+
+
+```{r}
+nodes <- data.frame(name =
+                      c(refugees_no_other$coo_name, refugees_no_other$coa_name) %>%
+                      unique()
+                    )
+nodes
+```
+
+```{r}
+refugees_no_other$IDsource = match(refugees_no_other$coo_name, nodes$name) -
+  1
+refugees_no_other$IDtarget = match(refugees_no_other$coa_name,  nodes$name) -
+  1
+```
+
+```{r}
+Colors = 'd3.scaleOrdinal([`#946943`, `#b63e36`,`#F5B041`, `#909497`,`#383867`, `#584c77`, `#33431e`, `#a36629`, `#92462f`])'
+```
+
+```{r}
+# Make the Network
+sankey <- sankeyNetwork(
+  Links = refugees_no_other,
+  Nodes = nodes,
+  Source = "IDsource",
+  Target = "IDtarget",
+  Value = "total",
+  NodeID = "name",
+  sinksRight = FALSE,
+  # nodeWidth = 50,
+  height = 700,
+  width = 1400,
+  fontSize = 12,
+  fontFamily = "georgia",
+  nodePadding = 12
+)
+refugee_graph <- htmlwidgets::prependContent(sankey, htmltools::tags$h1("Forcibly Displaced"),
+                 htmltools::tags$h3("Top Origin Countries for Refugees and the Places they Seek Asylum in 2022"),
+                 htmltools::tags$p("Data is from UNHCR’s refugees R package"))
+```
+```{r}
+refugee_graph
+```
+
+
