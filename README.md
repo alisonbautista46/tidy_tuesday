@@ -1,3 +1,5 @@
-# Tidy Tuesday
+# Refugees
 
-TidyTuesday is a weekly social data project, organized by the R4DS Online Learning Community. Every Monday a new dataset is released to the community to explore and create interesting data visualizations. You can [find the official repo here!](https://github.com/rfordatascience/tidytuesday)
+This week's data visualization took from this resource:
+
+E. Sinks, Louise. 2023. “TidyTuesday: Exploring Refugee Flow with A Sankey Diagram.” August 28, 2023. https://lsinks.github.io/posts/2023-08-28-TidyTuesday-Refugees/TidyTuesday34-refugees.html.
