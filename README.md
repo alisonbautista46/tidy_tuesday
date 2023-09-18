@@ -1,5 +1,7 @@
-# Tidy Tuesdays
+# Spam Emails
 
-TidyTuesday is a weekly social data project, organized by the R4DS Online Learning Community. Every Monday a new dataset is released to the community to explore and create interesting data visualizations. You can [find the official repo here!](https://github.com/rfordatascience/tidytuesday)
+The data this week comes from Vincent Arel-Bundock's Rdatasets package(https://vincentarelbundock.github.io/Rdatasets/index.html).
 
-08-22-2023: [Refugees](https://github.com/alisonbautista46/tidy_tuesdays/tree/08-22-2023-Refugees)
+This is a dataset collected at Hewlett-Packard Labs by Mark Hopkins, Erik Reeber, George Forman, and Jaap Suermondt and shared with the UCI Machine Learning Repository. The dataset classifies 4601 e-mails as spam or non-spam, with additional variables indicating the frequency of certain words and characters in the e-mail.
+
+![Chances of Spam Emails by Characters](https://github.com/alisonbautista46/tidy_tuesdays/edit/08-15-2023-Spam/tree/Spam-Email)
