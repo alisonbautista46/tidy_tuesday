@@ -1,0 +1,116 @@
+---
+title: "Tidy Tuesday - Unions"
+author: "Alison Bautista"
+date: "2023-08-15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(tidytuesdayR)
+library(scales)
+library(ggtext)
+library(showtext)
+library(tidytext)
+library(data.table)
+library(paletteer)
+library(extrafont)
+library(RColorBrewer)
+library(cowplot)
+library(magick)
+library(usethis)
+```
+
+```{r}
+tuesdata <- tidytuesdayR::tt_load(2023, week = 33)
+
+spam <- tuesdata$spam
+
+spam
+#remove the first column
+#spam <- spam[,-1]
+
+```
+```{r}
+spam_data <- melt(spam, id.vars = "yesno", variable.factor = FALSE, value.factor = FALSE)
+spam_data
+```
+```{r}
+renamed_spam_data <- spam_data %>%
+  factor(variable, 
+    levels = c('crl.tot','dollar', 'bang', 'money', 'n000'), labels = c("Capitalized Letter", "$$", "!!", '"money"', '"000"'))
+
+renamed_spam_data
+```
+
+
+
+```{r}
+df <- spam_data %>% 
+  filter(value!= 0) %>% 
+  group_by(variable, yesno) %>%
+  mutate(yesno = case_when(
+    yesno == "y" ~ "Spam",
+    yesno == "n" ~ "Not Spam"),
+    variable = case_when(
+      variable == "crl.tot" ~ "Capitalized Letter",
+      variable == "dollar" ~"$$",
+      variable == "bang" ~ "!!",
+      variable == "money" ~ '"money"',
+      variable == "n000" ~ '"000"',
+      variable == "make" ~ '"make"'
+    )) %>% 
+  summarise(sum_value = sum(value), count = n()) %>%
+  distinct() %>%
+  mutate(perc_occurances = paste(round((count/sum(count)*100), 2), "%"),
+         count_occurances = paste(count, "emails"),
+         perc_emails = sum(count)/ nrow(spam))
+
+df
+```
+
+
+
+
+```{r fig.height= 4, fig.width= 8}
+
+spam_plot <- df %>%
+  ggplot(aes(x = count, y = reorder(variable, -count), fill = yesno)) + 
+  geom_col(color = 'grey') +
+  scale_fill_manual(values=c('midnightblue', 'rosybrown2')) +
+  geom_text(aes(group = yesno, 
+                label = (ifelse(yesno == "Spam", count_occurances, ""))),
+                hjust = 1.1, 
+                nudge_x = -2,
+                size = 2, 
+                fontface = "bold") + 
+  labs(title = "<span style='font-size:15pt'>you've got...</span>
+       <span style='font-size:32pt'>SPAM</span>",
+       subtitle = "Characters and words that cause emails to be flagged as Spam.\nTotal length of columns indicate how many emails out of the 4600 contained the specified characters, \nand how many emails which contain those characters are flagged as spam",
+       caption = "Source: Vincent Arel-Bundock's Rdatasets- Spam Emails | Data Viz by Alison Bautista") +
+  xlab("Total Number of emails") +
+  ylab("") +
+  theme(panel.background = element_rect(fill = 'midnightblue'),
+        panel.grid.major = element_line(color = 'midnightblue'),
+        panel.grid.minor = element_line(color = 'midnightblue'),
+        plot.background = element_rect(fill = 'midnightblue'),
+        legend.background = element_rect(fill = 'midnightblue'),
+        legend.title = element_blank(),
+        legend.text = element_text(color = "grey"),
+        plot.title = element_markdown(family = "PT Serif", color = "gold", face = "bold"),
+        plot.subtitle = element_text(color = 'grey', size = 10, family = "Spot Mono"),
+        plot.caption = element_text(color = 'grey', size = 8, family = "Spot Mono"),
+        axis.title.x = element_text(color = "gold", family = "PT Serif"),
+        axis.text = element_text(color = 'grey', face = "bold", size = 9, family = "PT Serif")
+        )
+
+spam_plot
+```
+
+```{r}
+ggsave(spam_plot, filename = "spam_plot.jpeg", device = jpeg)
+```
+
+
