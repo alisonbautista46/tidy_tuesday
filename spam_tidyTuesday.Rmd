@@ -24,36 +24,37 @@ library(usethis)
 ```
 
 ```{r}
+#load the data in
 tuesdata <- tidytuesdayR::tt_load(2023, week = 33)
 
+#selecting dataset from database
 spam <- tuesdata$spam
 
+#show data
 spam
-#remove the first column
-#spam <- spam[,-1]
 
 ```
 ```{r}
+#remove the first column because capitalize letter string
+spam <- spam[,-1]
+
+
+#delimit file so variables are in one column
 spam_data <- melt(spam, id.vars = "yesno", variable.factor = FALSE, value.factor = FALSE)
-spam_data
-```
-```{r}
-renamed_spam_data <- spam_data %>%
-  factor(variable, 
-    levels = c('crl.tot','dollar', 'bang', 'money', 'n000'), labels = c("Capitalized Letter", "$$", "!!", '"money"', '"000"'))
-
-renamed_spam_data
 ```
 
 
 
 ```{r}
+#cleaning the data
 df <- spam_data %>% 
   filter(value!= 0) %>% 
   group_by(variable, yesno) %>%
+  #renaming y/n vairables
   mutate(yesno = case_when(
     yesno == "y" ~ "Spam",
     yesno == "n" ~ "Not Spam"),
+    #renaming each variable
     variable = case_when(
       variable == "crl.tot" ~ "Capitalized Letter",
       variable == "dollar" ~"$$",
@@ -62,8 +63,10 @@ df <- spam_data %>%
       variable == "n000" ~ '"000"',
       variable == "make" ~ '"make"'
     )) %>% 
+  #counting total occurances
   summarise(sum_value = sum(value), count = n()) %>%
   distinct() %>%
+  #calculating percentage of occurances and including in df
   mutate(perc_occurances = paste(round((count/sum(count)*100), 2), "%"),
          count_occurances = paste(count, "emails"),
          perc_emails = sum(count)/ nrow(spam))
@@ -74,11 +77,11 @@ df
 
 
 
-```{r fig.height= 4, fig.width= 8}
-
+```{r fig.height= 4, fig.width= 6}
+#creating spam plot
 spam_plot <- df %>%
   ggplot(aes(x = count, y = reorder(variable, -count), fill = yesno)) + 
-  geom_col(color = 'grey') +
+  geom_col(color = 'grey', width = .8) +
   scale_fill_manual(values=c('midnightblue', 'rosybrown2')) +
   geom_text(aes(group = yesno, 
                 label = (ifelse(yesno == "Spam", count_occurances, ""))),
@@ -86,31 +89,33 @@ spam_plot <- df %>%
                 nudge_x = -2,
                 size = 2, 
                 fontface = "bold") + 
-  labs(title = "<span style='font-size:15pt'>you've got...</span>
-       <span style='font-size:32pt'>SPAM</span>",
-       subtitle = "Characters and words that cause emails to be flagged as Spam.\nTotal length of columns indicate how many emails out of the 4600 contained the specified characters, \nand how many emails which contain those characters are flagged as spam",
+  labs(title = "<span style='font-size:16pt'>you've got...</span>
+       <span style='font-size:38pt'>SPAM</span>",
+       subtitle = "Occurrences of characters and words such as '000', 'money', 'make', '$', '!'that trigger\nspam filters,shown across 4,600 emails.",
        caption = "Source: Vincent Arel-Bundock's Rdatasets- Spam Emails | Data Viz by Alison Bautista") +
   xlab("Total Number of emails") +
   ylab("") +
-  theme(panel.background = element_rect(fill = 'midnightblue'),
+  theme(aspect.ratio = 1/3,
+        panel.background = element_rect(fill = 'midnightblue'),
         panel.grid.major = element_line(color = 'midnightblue'),
         panel.grid.minor = element_line(color = 'midnightblue'),
         plot.background = element_rect(fill = 'midnightblue'),
         legend.background = element_rect(fill = 'midnightblue'),
         legend.title = element_blank(),
-        legend.text = element_text(color = "grey"),
+        legend.text = element_text(color = "grey", size =7),
         plot.title = element_markdown(family = "PT Serif", color = "gold", face = "bold"),
-        plot.subtitle = element_text(color = 'grey', size = 10, family = "Spot Mono"),
-        plot.caption = element_text(color = 'grey', size = 8, family = "Spot Mono"),
+        plot.subtitle = element_text(color = 'grey', size = 8, family = "Spot Mono"),
+        plot.caption = element_text(color = 'grey', size = 5, family = "Spot Mono", hjust = 1.5),
         axis.title.x = element_text(color = "gold", family = "PT Serif"),
-        axis.text = element_text(color = 'grey', face = "bold", size = 9, family = "PT Serif")
+        axis.text = element_text(color = 'grey', face = "bold", family = "PT Serif")
         )
 
 spam_plot
 ```
 
 ```{r}
-ggsave(spam_plot, filename = "spam_plot.jpeg", device = jpeg)
+#exporting plot
+ggsave(spam_plot, filename = "spam_plot.png", height = 5, width = 7.5)
 ```
 
 
